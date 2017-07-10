@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
 from collections import OrderedDict
-from urllib.parse import quote
+from unidecode import unidecode
 from bs4 import BeautifulSoup
 from getpass import getpass
 from html import unescape
@@ -16,6 +16,13 @@ import json
 import string
 import dryscrape
 import signal
+
+try:
+    # Py3
+    from urllib.parse import quote
+except ImportError:
+    # Py2
+    from urllib import pathname2url as quote
 
 # To handle with keyboard interruption
 def signal_handler(signal, frame):
@@ -113,11 +120,14 @@ The LinkedIn Users Gather tool to extract all users from a LinkedIn Company.
         loop = 5 if len(lis) > 5 else len(lis)
         for idx in range(loop):
             aux = lis[idx].find('div', {'class':'search-result__info'})
-            link = aux.find('a', {'class':'search-result__result-link'}).get('href')
-            name = aux.find('h3', {'class':'search-result__title'}).text
-            desc = aux.find('p', {'class':'subline-level-1'}).text
+            link = aux.find('a', {'class':'search-result__result-link'})
+            link = link.get('href') if link else '??'
+            name = aux.find('h3', {'class':'search-result__title'})
+            name = name.text if name else '??'
+            desc = aux.find('p', {'class':'subline-level-1'})
+            desc = desc.text if desc else '??'
 
-            if link not in links.keys():
+            if str(idx) not in links.keys():
                 links[str(idx)] = dict()
             links[str(idx)].update(dict(link=link, name=name, desc=desc))
 
@@ -154,21 +164,17 @@ The LinkedIn Users Gather tool to extract all users from a LinkedIn Company.
 
         for item in lis:
             name = item.find('span', {'class':'actor-name'})
-            if name:
-                name = name.text
+            name = name.text if name else "??"
             occupation = item.find('p', {'class':'search-result__snippets'})
-            if occupation:
-                occupation = occupation.text.replace('\n', ' ')
-
-            if '{}'.format(company_name).lower() in '{}'.format(occupation).lower():
-                try:
-                    print(         '[+] :: {} :: {}\n'.format(name, occupation))
-                    self.filewrite('[+] :: {} :: {}\n'.format(name, occupation))
-                except Exception as e:
-                    print(         '[+] :: {} :: {}\n'.format(name.encode('utf-8', 'replace'),
-                        occupation.encode('utf-8', 'replace')))
-                    self.filewrite('[+] :: {} :: {}\n'.format(name.encode('utf-8', 'replace'),
-                        occupation.encode('utf-8', 'replace')))
+            occupation = occupation.text.replace('\n', ' ') if occupation else "??"
+            try:
+                print('[+] :: {} :: {}'.format(unidecode(name), unidecode(occupation)))
+                self.filewrite('[+] :: {} :: {}\n'.format(unidecode(name), unidecode(occupation)))
+            except Exception as e:
+                print('[+] :: {} :: {}\n'.format(unidecode(name.encode('utf-8', 'replace')),
+                                                 unidecode(occupation.encode('utf-8', 'replace'))))
+                self.filewrite('[+] :: {} :: {}\n'.format(unidecode(name.encode('utf-8', 'replace')),
+                                                          unidecode(occupation.encode('utf-8', 'replace'))))
 
 
     def get(self):
@@ -195,6 +201,15 @@ The LinkedIn Users Gather tool to extract all users from a LinkedIn Company.
             if 'search-no-results' in sess.body():
                 break
 
+            scrollDown = "function scrollWin(){\
+                    var size = arguments[0];\
+                    if( size <= 0 ){ return true; };\
+                    window.scrollBy(0,500);\
+                    scrolldelay = setTimeout(function(){scrollWin(size-1);},500);\
+                    return true;};\
+                    scrollWin(5);"
+            sess.exec_script(scrollDown)
+            sleep(3)
             r = sess.body()
             self.parse(r, company_name)
 
