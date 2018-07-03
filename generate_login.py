@@ -35,7 +35,6 @@ class Login(object):
 
 
     def combinations(self, names):
-        first = names[0] if self.model == 'firstname' else names[0][0]
         if self.model == 'firstletter':
             first = '{}'.format(names[0][0])
         elif self.model == 'firstnamedot':

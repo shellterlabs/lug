@@ -89,6 +89,10 @@ The LinkedIn Users Gather tool to extract all users from a LinkedIn Company.
         sess.at_xpath('//*[@id="login-password"]').set(session_pass)
         sess.at_xpath('//*[@id="login-submit"]').click()
 
+        sleep(10)
+        sess.render('/tmp/oo.png')
+        import ipdb
+        ipdb.set_trace()
         soup = BeautifulSoup(sess.body(), 'lxml')
 
         if 'Two Step Verification' in soup.find('title').text:
