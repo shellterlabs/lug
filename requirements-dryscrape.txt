@@ -1,8 +1,0 @@
-beautifulsoup4==4.5.3
-bs4==0.0.1
-dryscrape==1.0
-lxml==3.7.3
-requests==2.13.0
-webkit-server==1.0
-unidecode==0.4.20
-xvfbwrapper==0.2.9
