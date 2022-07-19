@@ -5,4 +5,4 @@ ipdb==0.13.9
 selenium==4.3.0
 Unidecode==1.3.4
 urllib3==1.26.9
-lxml==4.9.0
+lxml==4.9.1
