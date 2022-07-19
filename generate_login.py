@@ -34,22 +34,24 @@ class Login(object):
         return lines
 
 
-    def combinations(self, names):
-        if self.model == 'firstletter':
-            first = '{}'.format(names[0][0])
-        elif self.model == 'firstnamedot':
-            first = '{}.'.format(names[0])
-        elif self.model == 'firstname':
-            first = '{}'.format(names[0])
-        else:
-            first = ''
+    def combinations(self, names, model=None):
+      if model == None:
+          model = self.model
+      if model == 'firstletter':
+          first = '{}'.format(names[0][0])
+      elif model == 'firstnamedot':
+          first = '{}.'.format(names[0])
+      elif model == 'firstname':
+          first = '{}'.format(names[0])
+      else:
+          first = ''
 
-        aux = list()
-        for word in names[1:]:
-            if len(word) < 3:
-                continue
-            aux.append('{}{}'.format(first,word))
-        return aux
+      aux = list()
+      for word in names[1:]:
+          if len(word) < 3:
+              continue
+          aux.append('{}{}'.format(first,word))
+      return aux
 
 
     def save(self, names):
@@ -64,9 +66,13 @@ class Login(object):
             if m:
                 words = m.group(1)
                 words = unidecode(words).lower()
+                if '(' in words and ')' in words:
+                  words = re.sub(r'\(.*?\)', '', words)
                 exclude = set(string.punctuation)
-                names = ''.join(ch for ch in words if ch not in exclude).split(' ')
-                combis = self.combinations(names)
+                names = ''.join(ch for ch in words if ch not in exclude).strip().split(' ')
+                _all = ['firstletter','firstname','firstnamedot'] if self.model == 'all' else [self.model]
+                for model in _all:
+                  combis = self.combinations(names, model=model)
                 if 'usuario.linkedin' in combis:
                     continue
                 allnames.update(combis)
@@ -76,12 +82,12 @@ class Login(object):
 if __name__ == '__main__':
     if len(argv) < 2:
         print('Erro: Provide the result of extract.py.')
-        print('Usage: {} [firstletter | firstname | firstnamedot] <list_of_names.txt>.'.format(argv[0]))
+        print('Usage: {} [all | firstletter | firstname | firstnamedot] <list_of_names.txt>.'.format(argv[0]))
         exit(1)
 
     if len(argv) == 2:
         filename = argv[1]
-        model = 'firstletterdot'
+        model = 'all'
     else:
         filename = argv[2]
         model = argv[1]
